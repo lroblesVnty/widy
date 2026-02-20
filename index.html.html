@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rosa brillante (corregida) - Bloom + Pétalos cayendo</title>
+<style>
+  :root{
+    --bg1:#05060a;
+    --bg2:#0b1022;
+
+   
+ 
+    --rose1:#ff0000;
+    --rose2:#ff6b6b;
+    --rose3:#8b0000;
+    --glow:#ff3333;
+
+
+    --stem1:#2ee07a;
+    --stem2:#0aa84e;
+    --leaf1:#38f39a;
+    --leaf2:#0aa84e;
+  }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    background:
+      radial-gradient(1200px 700px at 50% 35%, #1a2450 0%, transparent 55%),
+      radial-gradient(900px 600px at 30% 70%, #1b0a2b 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg1), var(--bg2));
+    overflow:hidden;
+    color:#fff;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+
+  /* Toggle (CSS-only) */
+  .ui{
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    background: rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.15);
+    padding: 10px 12px;
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
+    z-index: 10;
+    user-select:none;
+  }
+  .ui input{ accent-color: var(--glow); }
+  .ui span{ font-size: 14px; opacity:.95; }
+
+  .scene{
+    position:relative;
+    width:340px;
+    height:420px;
+    display:grid;
+    place-items:center;
+  }
+
+  /* Aura */
+  .aura{
+    position:absolute;
+    width:280px;
+    height:280px;
+    border-radius:50%;
+    background: radial-gradient(circle at 50% 50%,
+      rgba(255,59,143,.30) 0%,
+      rgba(255,59,143,.15) 35%,
+      rgba(255,59,143,0) 70%);
+    filter: blur(2px);
+    transform: translateY(-70px);
+    animation: auraPulse 2.8s ease-in-out infinite;
+  }
+  @keyframes auraPulse{
+    0%,100%{ transform: translateY(-70px) scale(1); opacity:.85; }
+    50%{ transform: translateY(-70px) scale(1.08); opacity:1; }
+  }
+
+  /* Sombra suelo */
+  .shadow{
+    position:absolute;
+    bottom:36px;
+    width:220px;
+    height:30px;
+    background: radial-gradient(circle, rgba(0,0,0,.55), rgba(0,0,0,0) 70%);
+    filter: blur(4px);
+    opacity:.75;
+  }
+
+  /* Tallo */
+  
+    .stem{
+    position:absolute;
+    top: 235px;       /* coloca el inicio del tallo debajo de la flor */
+    bottom: auto;
+    width:16px;
+    height: 190px;    /* hasta el suelo aprox */
+    border-radius:12px;
+    background: linear-gradient(180deg, var(--stem1), var(--stem2));
+    box-shadow:
+        0 0 18px rgba(46,224,122,.25),
+        0 0 38px rgba(46,224,122,.12);
+    }
+
+    
+    .stem, .thorn, .leaf { z-index: 1; }
+    .rose { z-index: 3; }
+    .petals { z-index: 2; } /* pétalos cayendo */
+
+
+
+  /* Espinas */
+  .thorn{
+    position:absolute;
+    width:0; height:0;
+    border-left:8px solid transparent;
+    border-right:8px solid transparent;
+    border-top:14px solid #0b7a3a;
+    filter: drop-shadow(0 0 6px rgba(46,224,122,.25));
+    opacity:.95;
+  }
+  .thorn.t1{ bottom:190px; left: calc(50% + 12px); transform: rotate(20deg); }
+  .thorn.t2{ bottom:145px; left: calc(50% - 26px); transform: rotate(-25deg); }
+  .thorn.t3{ bottom:105px; left: calc(50% + 16px); transform: rotate(22deg); }
+
+  /* Hojas */
+  .leaf{
+    position:absolute;
+    width:84px;
+    height:48px;
+    background: radial-gradient(circle at 30% 30%, var(--leaf1), var(--leaf2));
+    border-radius: 60px 60px 60px 10px;
+    filter: drop-shadow(0 0 10px rgba(46,224,122,.18));
+  }
+  .leaf::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0));
+    clip-path: polygon(0 55%, 100% 10%, 100% 22%, 0 72%);
+    opacity:.55;
+  }
+  .leaf.l1{ bottom:150px; left: calc(50% + 18px); transform: rotate(18deg); }
+  .leaf.l2{ bottom:120px; left: calc(50% - 108px); transform: rotate(-165deg) scaleX(-1); }
+
+  /* Flor */
+  .rose{
+    position:absolute;
+    top:50px;
+    width:210px;
+    height:210px;
+    display:grid;
+    place-items:center;
+    transform: translateY(-10px);
+    filter: drop-shadow(0 0 14px rgba(255,59,143,.35));
+  }
+
+  /* Centro */
+  .core{
+    position:absolute;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, var(--rose2), var(--rose3));
+    box-shadow:
+      0 0 18px rgba(255,59,143,.55),
+      0 0 38px rgba(255,59,143,.28);
+    animation: corePulse 2.8s ease-in-out infinite;
+  }
+  @keyframes corePulse{
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.06); }
+  }
+
+  /* ===== PÉTALOS (CORREGIDOS) =====
+     - Rotación siempre presente con --r
+     - Apertura/capullo con variables (y/scale)
+     - Forma estable con border-radius + gradientes (evita path()) [1](https://cssbud.com/css-generator/css-glow-generator/)
+  */
+  .petal{
+    position:absolute;
+    width:94px;
+    height:120px;
+    transform-origin: 50% 92%;
+    transform: rotate(var(--r)) translateY(var(--open-y)) scale(var(--open-s));
+    will-change: transform;
+  }
+
+  .inner{ width:72px; height:92px; opacity:.98; }
+
+  .petal::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius: 60% 60% 85% 85% / 55% 55% 95% 95%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.35), rgba(255,255,255,0) 48%),
+      radial-gradient(circle at 55% 75%, var(--rose2), var(--rose1) 58%, var(--rose3) 100%);
+    box-shadow:
+      0 0 10px rgba(255,59,143,.35),
+      0 0 24px rgba(255,59,143,.18);
+    filter: saturate(1.35);
+  }
+  .petal::after{
+    content:"";
+    position:absolute;
+    inset:-12px;
+    border-radius: inherit;
+    background: radial-gradient(circle at 35% 20%, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 45%);
+    filter: blur(6px);
+    opacity:.75;
+    pointer-events:none;
+  }
+
+  /* Rotación base + valores de abierto/capullo */
+  .p1{ --r:-18deg;  --open-y:  6px; --open-s:1;    --bud-y:-10px; --bud-s:.74; }
+  .p2{ --r: 22deg;  --open-y:  6px; --open-s:1;    --bud-y:-10px; --bud-s:.74; }
+  .p3{ --r:-62deg;  --open-y: 10px; --open-s:.96;  --bud-y: -8px; --bud-s:.70; }
+  .p4{ --r: 66deg;  --open-y: 10px; --open-s:.96;  --bud-y: -8px; --bud-s:.70; }
+  .p5{ --r:-120deg; --open-y: 22px; --open-s:.88;  --bud-y: -6px; --bud-s:.66; opacity:.98; }
+  .p6{ --r: 126deg; --open-y: 22px; --open-s:.88;  --bud-y: -6px; --bud-s:.66; opacity:.98; }
+
+  .i1{ --r:-12deg;  --open-y: -4px; --open-s:.92;  --bud-y:-12px; --bud-s:.70; }
+  .i2{ --r: 16deg;  --open-y: -4px; --open-s:.92;  --bud-y:-12px; --bud-s:.70; }
+  .i3{ --r:-38deg;  --open-y:  2px; --open-s:.88;  --bud-y:-10px; --bud-s:.66; }
+  .i4{ --r: 42deg;  --open-y:  2px; --open-s:.88;  --bud-y:-10px; --bud-s:.66; }
+
+  /* Glow breathing */
+  .petal::before{ animation: glowBreath 2.8s ease-in-out infinite; }
+  .rose{ animation: glowBreath 2.8s ease-in-out infinite; }
+  @keyframes glowBreath{
+    0%,100%{ filter: drop-shadow(0 0 10px rgba(255,59,143,.30)); }
+    50%{ filter: drop-shadow(0 0 18px rgba(255,59,143,.55)); }
+  }
+
+  /* ===== FLORECER (SIN DEFORMAR) ===== */
+  #bloom:not(:checked) ~ .scene .rose{
+    animation: none;
+    transform: translateY(-10px) scale(.78);
+    filter: drop-shadow(0 0 10px rgba(255,59,143,.22));
+  }
+  #bloom:not(:checked) ~ .scene .petal{
+    animation: none;
+    transform: rotate(var(--r)) translateY(var(--bud-y)) scale(var(--bud-s));
+  }
+
+  #bloom:checked ~ .scene .rose{
+    animation:
+      bloomRose 3.2s ease-in-out forwards,
+      glowBreath 2.8s ease-in-out infinite;
+  }
+  #bloom:checked ~ .scene .petal{
+    animation: petalBloom 3.2s ease-in-out forwards;
+  }
+
+  /* cascada (apertura en orden) */
+  #bloom:checked ~ .scene .p1{ animation-delay:.20s; }
+  #bloom:checked ~ .scene .p2{ animation-delay:.25s; }
+  #bloom:checked ~ .scene .p3{ animation-delay:.35s; }
+  #bloom:checked ~ .scene .p4{ animation-delay:.40s; }
+  #bloom:checked ~ .scene .p5{ animation-delay:.55s; }
+  #bloom:checked ~ .scene .p6{ animation-delay:.60s; }
+
+  #bloom:checked ~ .scene .i1{ animation-delay:.00s; }
+  #bloom:checked ~ .scene .i2{ animation-delay:.05s; }
+  #bloom:checked ~ .scene .i3{ animation-delay:.10s; }
+  #bloom:checked ~ .scene .i4{ animation-delay:.15s; }
+
+  @keyframes bloomRose{
+    0%   { transform: translateY(-10px) scale(.78); }
+    55%  { transform: translateY(-10px) scale(.94); }
+    100% { transform: translateY(-10px) scale(1); }
+  }
+
+  /* IMPORTANTE: en TODOS los frames se usa rotate(var(--r)) */
+  @keyframes petalBloom{
+    0%{
+      transform: rotate(var(--r)) translateY(var(--bud-y)) scale(var(--bud-s));
+      filter: saturate(1.0);
+    }
+    60%{
+      transform: rotate(var(--r)) translateY(-2px) scale(.92);
+    }
+    100%{
+      transform: rotate(var(--r)) translateY(var(--open-y)) scale(var(--open-s));
+      filter: saturate(1.15);
+    }
+  }
+
+  /* ===== Partículas ===== */
+  .spark{
+    position:absolute;
+    width:4px; height:4px;
+    border-radius:50%;
+    background: rgba(255,155,210,.9);
+    box-shadow: 0 0 12px rgba(255,59,143,.75);
+    animation: floatUp 3.6s linear infinite;
+    opacity:.9;
+  }
+  .s1{ left:40%; top:40%; animation-delay: -1.0s; }
+  .s2{ left:58%; top:34%; animation-delay: -2.2s; transform: scale(1.1); }
+  .s3{ left:50%; top:28%; animation-delay: -3.1s; transform: scale(.9); }
+  .s4{ left:66%; top:46%; animation-delay: -1.7s; transform: scale(.8); }
+  @keyframes floatUp{
+    0%{ transform: translateY(18px) scale(.9); opacity:0; }
+    15%{ opacity:.9; }
+    100%{ transform: translateY(-38px) scale(1.15); opacity:0; }
+  }
+
+  /* ===== Pétalos cayendo ===== */
+  .petals{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .fall{
+    position:absolute;
+    top:-14%;
+    width:16px;
+    height:22px;
+    border-radius: 60% 60% 85% 85% / 55% 55% 95% 95%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.35), transparent 48%),
+      radial-gradient(circle at 55% 75%, var(--rose2), var(--rose1) 58%, var(--rose3) 100%);
+    filter: drop-shadow(0 0 10px rgba(255,59,143,.35));
+    opacity:0;
+    animation: petalFall 4.6s linear infinite;
+    will-change: transform, opacity;
+  }
+  .f1{ left:18%; animation-delay:-0.0s; }
+  .f2{ left:32%; animation-delay:-1.2s; }
+  .f3{ left:48%; animation-delay:-2.1s; }
+  .f4{ left:62%; animation-delay:-0.8s; }
+  .f5{ left:76%; animation-delay:-2.8s; }
+  .f6{ left:90%; animation-delay:-1.6s; }
+
+  @keyframes petalFall{
+    0%   { opacity:0; transform: translateY(-40px) translateX(0px) rotate(0deg); }
+    8%   { opacity:.95; }
+    35%  { transform: translateY(190px) translateX(-18px) rotate(140deg); }
+    70%  { transform: translateY(380px) translateX(22px) rotate(320deg); opacity:.9; }
+    100% { opacity:0; transform: translateY(520px) translateX(-10px) rotate(520deg); }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; transition: none !important; }
+  }
+
+  
+.romantic-text{
+  position:absolute;
+  bottom: -70px;              /* separación del borde inferior */
+  width:100%;
+  text-align:center;
+  
+
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+
+  color: var(--rose2);
+  text-shadow:
+    0 0 6px rgba(255, 60, 60, 0.6),
+    0 0 14px rgba(255, 60, 60, 0.4);
+
+  
+    /*animation: heartbeat 2.4s ease-in-out infinite;*/
+    transform-origin: center;
+    pointer-events:none;
+
+}
+
+
+/*  Animación tipo latido */
+@keyframes heartbeat{
+  0%{
+    transform: scale(1);
+    opacity:0.9;
+  }
+  14%{
+    transform: scale(1.12); /* primer latido */
+    opacity:1;
+  }
+  28%{
+    transform: scale(1);
+  }
+  42%{
+    transform: scale(1.08); /* segundo latido más suave */
+  }
+  70%{
+    transform: scale(1);
+    opacity:0.95;
+  }
+  100%{
+    transform: scale(1);
+    opacity:0.9;
+  }
+}
+
+
+/* brillo suave del texto */
+@keyframes textGlow{
+    0%,100%{
+        opacity:0.85;
+        text-shadow:
+        0 0 6px rgba(255,60,60,.5),
+        0 0 12px rgba(255,60,60,.35);
+    }
+    50%{
+        opacity:1;
+        text-shadow:
+        0 0 10px rgba(255,60,60,.8),
+        0 0 20px rgba(255,60,60,.6);
+    }
+}
+
+
+@media (max-width: 480px){
+  .romantic-text{
+    font-size: 15px;
+    bottom: -55px;
+  }
+}
+
+
+.top-text{
+  position:absolute;
+  top: 8px;              /* altura del texto */
+  width:100%;
+  text-align:center;
+
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+
+  color: var(--rose2);
+  text-shadow:
+    0 0 6px rgba(255,60,60,.6),
+    0 0 14px rgba(255,60,60,.4);
+
+  z-index: 5;             /* MÁS alto que la rosa */
+  pointer-events:none;
+
+  animation: heartbeat 2.4s ease-in-out infinite;
+}
+
+.music-btn{
+    position: fixed;
+    top: 20px;        /* ⬆ arriba */
+    right: 20px;      /* ➡ derecha */
+
+    padding: 10px 16px;
+    border-radius: 20px;
+    border: none;
+
+    background: linear-gradient(135deg, #ff1a1a, #b11226);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+  
+    white-space: nowrap;      /* no saltos de línea */
+    overflow: hidden;         /* evita desbordes */
+    text-overflow: ellipsis;  /* ... si no cabe */
+
+
+    box-shadow:
+    0 0 10px rgba(255,0,0,.6),
+    0 0 20px rgba(255,0,0,.4);
+
+    z-index: 10;      /* asegura que esté por encima de la rosa */
+    /*animation: heartbeat 2.4s ease-in-out infinite;*/
+}
+
+
+@media (max-width: 480px){
+  .music-btn{
+    font-size: 12px;
+    padding: 8px 12px;
+    top: 12px;
+    right: 12px;
+  }
+}
+
+
+
+</style>
+</head>
+
+<body>
+
+    <audio
+      id="id_audio"
+      src="Lady Gaga, Bruno Mars - Die With A Smile (Lyrics).mp3"
+    ></audio>
+
+    <!-- Debe ir antes de .scene para que funcione el selector ~ -->
+    <label class="ui" title="Haz clic aquí">
+        <button class="music-btn" onclick="playMusic()">
+            Haz clic aquí.
+        </button>
+
+    </label> 
+
+    <div class="scene">
+        <div class="aura"></div>
+
+        <div class="petals" aria-hidden="true">
+        <span class="fall f1"></span>
+        <span class="fall f2"></span>
+        <span class="fall f3"></span>
+        <span class="fall f4"></span>
+        <span class="fall f5"></span>
+        <span class="fall f6"></span>
+        </div>
+        
+        <div class="top-text">
+            Te adoro Widy! ❤️
+        </div>
+
+
+        <div class="rose" aria-label="Rosa brillante">
+        <!-- pétalos exteriores -->
+        <div class="petal p1"></div>
+        <div class="petal p2"></div>
+        <div class="petal p3"></div>
+        <div class="petal p4"></div>
+        <div class="petal p5"></div>
+        <div class="petal p6"></div>
+
+        <!-- pétalos interiores -->
+        <div class="petal inner i1"></div>
+        <div class="petal inner i2"></div>
+        <div class="petal inner i3"></div>
+        <div class="petal inner i4"></div>
+
+        <div class="core"></div>
+        </div>
+
+        <div class="stem"></div>
+        <div class="thorn t1"></div>
+        <div class="thorn t2"></div>
+        <div class="thorn t3"></div>
+
+        <div class="leaf l1"></div>
+        <div class="leaf l2"></div>
+
+        <div class="spark s1"></div>
+        <div class="spark s2"></div>
+        <div class="spark s3"></div>
+        <div class="spark s4"></div>
+
+        <div class="shadow"></div>
+        
+        <div class="romantic-text">
+            Si fuese el fin del mundo, me gustaría estar a tu lado ❤️
+        </div>
+
+    </div>
+
+    <script>
+        const floweBtn = document.querySelector(".music-btn");
+        const audio = document.getElementById("id_audio")
+        floweBtn.onclick = () => {
+            audio.play()
+            audio.volume = 0.5
+        }
+    </script>
+</body>
+</html>
