@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Corazón widy con sombra degradada</title>
+    <style>
+      :root {
+        --size: 380px;
+        --bg1: #0f1221;
+        --bg2: #1b2150;
+
+        --text: rgba(255, 209, 220, 0.98);
+
+        /* Texto diagonal */
+        --angle: -18deg;
+        --font: 8px;
+        --pad: 5%;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at 30% 20%, var(--bg2), var(--bg1));
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
+      }
+
+      .wrap {
+        width: var(--size);
+        height: var(--size);
+        filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.35));
+      }
+
+      svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .box {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .patternText {
+        color: rgba(255, 35, 35, 0.95);
+        font-weight: 700;
+        font-size: 5px;          /* MÁS pequeño */
+        letter-spacing: .01em;   /* más juntito */
+
+        line-height: 1;
+        text-transform: lowercase;
+        white-space: pre;
+        margin: 0;
+
+        /* ✅ ya NO diagonal */
+        transform: none;
+        transform-origin: center;
+
+        /* ✅ ya NO agrandado */
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: var(--pad);
+        box-sizing: border-box;
+
+        user-select: none;
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.08);
+      }
+      
+    .pulse{
+         animation: pulseShadow 2.6s ease-in-out infinite;
+    }
+
+
+      @media (max-width: 420px) {
+        :root {
+          --size: 320px;
+          --font: 7px;
+        }
+      }
+
+            
+        
+@keyframes pulseShadow {
+  0%   { opacity: 0.5; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <svg
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-label="corazón"
+      >
+        <defs>
+          <!-- Path base del corazón (lo reutilizamos) -->
+          <path
+            id="heartPath"
+            d="M50 86
+          C 20 66, 5 48, 10 30
+          C 15 15, 32 12, 42 22
+          C 47 27, 49 31, 50 34
+          C 51 31, 53 27, 58 22
+          C 68 12, 85 15, 90 30
+          C 95 48, 80 66, 50 86 Z"
+          />
+
+          <!-- Clip para que el texto solo se vea dentro del corazón -->
+          <clipPath id="heartClip">
+            <use href="#heartPath"></use>
+          </clipPath>
+
+          <!-- Blur suave para que parezca “sombra” -->
+          <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+            <feGaussianBlur stdDeviation="1.2" />
+          </filter>
+        </defs>
+
+        <use
+          href="#heartPath"
+          fill="none"
+          stroke="rgba(255,60,90,0.20)"
+          stroke-width="4.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          filter="url(#softShadow)"
+        />
+
+        <!-- AQUI se dibuja el “degradado en el recorrido” con JS -->
+        <g id="trailBlur" filter="url(#softShadow)" class="pulse"></g>
+        <g id="trailSharp" class="pulse"></g>
+
+        <!-- Texto recortado (solo texto, sin fondo rojo) -->
+        <foreignObject
+          x="0"
+          y="0"
+          width="100"
+          height="100"
+          clip-path="url(#heartClip)"
+        >
+          <div xmlns="http://www.w3.org/1999/xhtml" class="box">
+            <p id="pattern" class="patternText"></p>
+          </div>
+        </foreignObject>
+      </svg>
+    </div>
+
+    <script>
+      const word = "widy";
+      const sep = " ";
+      const p = document.getElementById("pattern");
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      function buildPattern() {
+        const style = getComputedStyle(p);
+        const fontSize = parseFloat(style.fontSize) || 8;
+        const fontFamily = style.fontFamily || "system-ui";
+        const fontWeight = style.fontWeight || "700";
+        ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+
+        const box = p.getBoundingClientRect();
+        const token = word + sep;
+        const tokenW =
+          ctx.measureText(token).width || fontSize * token.length * 0.6;
+
+        const tokensPerLine = Math.max(
+          14,
+          Math.floor((box.width * 1.1) / tokenW),
+        );
+        const linePx = fontSize * 1.02;
+        const lines = Math.max(55, Math.floor((box.height * 1.1) / linePx));
+
+        const line = token.repeat(tokensPerLine).trimEnd();
+        let out = "";
+        for (let i = 0; i < lines; i++) out += line + "\n";
+        p.textContent = out.trimEnd();
+      }
+
+      // ====== 2) SOMBRA DEGRADADA SIGUIENDO EL RECORRIDO ======
+      function buildPathTrail() {
+        const path = document.getElementById("heartPath");
+        const gBlur = document.getElementById("trailBlur");
+        const gSharp = document.getElementById("trailSharp");
+
+        gBlur.innerHTML = "";
+        gSharp.innerHTML = "";
+
+        const total = path.getTotalLength(); // longitud total [2](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement)[1](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getPointAtLength)
+
+        const segments = 620; // más = degradado más suave
+        const startAt = 0.12;
+        const gamma = 2.0;
+
+        const maxA = 0.85;
+        const minA = 0.18; // 👈 clave: cubre TODO el corazón
+
+        const color = [255, 0, 0];
+
+        const wBlur = 2.8; // grosor de sombra
+        const wSharp = 1.0; // línea fina para definición (opcional)
+
+        const startLen = total * startAt;
+        const step = total / segments;
+
+        for (let i = 0; i < segments; i++) {
+          const t = i / (segments - 1); // 0..1
+          const fade = Math.pow(1 - t, gamma); // curva de degradado
+          const a = minA + (maxA - minA) * fade; // 👈 nunca baja de minA
+
+          const d1 = (startLen + i * step) % total;
+          const d2 = (startLen + (i + 1) * step) % total;
+
+          const p1 = path.getPointAtLength(d1); // muestreo del path [1](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getPointAtLength)
+          const p2 = path.getPointAtLength(d2);
+
+          const lineBlur = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line",
+          );
+          lineBlur.setAttribute("x1", p1.x);
+          lineBlur.setAttribute("y1", p1.y);
+          lineBlur.setAttribute("x2", p2.x);
+          lineBlur.setAttribute("y2", p2.y);
+          lineBlur.setAttribute(
+            "stroke",
+            `rgba(${color[0]},${color[1]},${color[2]},${a})`,
+          );
+          lineBlur.setAttribute("stroke-width", wBlur);
+          lineBlur.setAttribute("stroke-linecap", "round");
+
+          const lineSharp = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line",
+          );
+          lineSharp.setAttribute("x1", p1.x);
+          lineSharp.setAttribute("y1", p1.y);
+          lineSharp.setAttribute("x2", p2.x);
+          lineSharp.setAttribute("y2", p2.y);
+          lineSharp.setAttribute(
+            "stroke",
+            `rgba(${color[0]},${color[1]},${color[2]},${Math.min(1, a * 0.75)})`,
+          );
+          lineSharp.setAttribute("stroke-width", wSharp);
+          lineSharp.setAttribute("stroke-linecap", "round");
+
+          gBlur.appendChild(lineBlur);
+          gSharp.appendChild(lineSharp);
+        }
+
+        // Esta técnica de “gradiente siguiendo el trazo” se logra
+        // segmentando el camino con getPointAtLength() [3](https://gist.github.com/mbostock/4163057)[4](https://stackoverflow.com/questions/14633363/can-i-apply-a-gradient-along-an-svg-path)
+      }
+
+      window.addEventListener("load", () => {
+        buildPattern();
+        buildPathTrail();
+      });
+      window.addEventListener("resize", () => {
+        buildPattern();
+        buildPathTrail();
+      });
+    </script>
+  </body>
+</html>
